@@ -1,0 +1,8 @@
+services:
+  data-analysis:
+    build: .
+    image: tp04-data-analysis:1.0
+    container_name: tp04-analysis
+    volumes:
+      - ./data:/app/data:ro
+    restart: "no"
