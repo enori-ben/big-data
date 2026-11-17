@@ -1,0 +1,4 @@
+/TP06/.venv/
+/TP06/checkpoint/
+__pycache__/
+*.pyc
