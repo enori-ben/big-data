@@ -139,11 +139,29 @@ The file `flink_window.sql` contains a Kafka table definition with an event-time
 
 It is included for query analysis. Flink execution was not performed as part of this project.
 
+## Main Streaming Configuration
+
+The main Spark application reads JSON events from the `campus-events` Kafka topic and filters records whose `eventType` is `check-in`.
+
+The attendance aggregation uses the following event-time settings:
+
+| Setting | Value |
+|---|---|
+| Window duration | 2 minutes |
+| Slide interval | 1 minute |
+| Watermark delay | 2 minutes |
+| Processing trigger | 5 seconds |
+| Output mode | Update |
+| Console rows | Up to 100 rows per micro-batch |
+| Checkpoint | `./checkpoint/campus-events-recovery` |
+
+The two-minute window with a one-minute slide creates overlapping windows. The watermark allows Spark to handle events that arrive late, within the configured delay. The console's `numRows=100` option controls how many aggregation-result rows are printed; it does not mean that only 100 Kafka events are consumed.
+
 ## Checkpointing
 
 Spark checkpoint directories are used to store streaming progress and state information, supporting recovery after application interruption.
 
-Checkpoint data is generated locally and is intentionally excluded from version control.
+Checkpoint data is generated locally and is intentionally excluded from version control. When changing the query's stateful logic, use a fresh checkpoint directory for a clean test; an existing checkpoint preserves previously recorded offsets and state.
 
 ## Screenshots
 
