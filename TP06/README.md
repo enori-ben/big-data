@@ -9,9 +9,13 @@
 
 This project implements a real-time campus attendance analytics system using Apache Kafka and Apache Spark Structured Streaming.
 
-A Kafka producer generates synthetic campus events, including student check-ins and course-related events. These events are published to a Kafka topic and processed by Spark to calculate attendance statistics using event-time windows.
+A Python producer generates synthetic campus events, including student check-ins and course-related events. These events are published to a Kafka topic and processed by Spark to calculate attendance statistics using event-time windows.
+
+The main producer test generated 100 synthetic events for 20 student identifiers (S101–S120) across three departments: Computer Science, Mathematics, and Physics. Approximately 80% of the generated events were check-ins and 20% were open-course events.
 
 An additional Spark application detects late check-ins and identifies each student's first daily check-in.
+
+**Report:** [TP06 Practical Work Report (PDF)](report.pdf)
 
 ## Technologies
 
@@ -74,7 +78,7 @@ python -m pip install -r requirements.txt
 
 ## Kafka Topic
 
-The application uses the following Kafka topic:
+The application uses the Kafka topic:
 
 ```text
 campus-events
@@ -119,6 +123,8 @@ The console sink is configured with:
 
 **Important:** `numRows = 100` controls the maximum number of result rows printed by the console sink in each micro-batch. It does not mean that Spark receives or displays exactly 100 raw Kafka events. Since the stream filters out non-check-in events and groups the remaining events by time window and department, the number of displayed aggregation rows can be smaller than the number of produced events.
 
+The two-minute window with a one-minute slide creates overlapping windows. A later empty micro-batch can occur when there are no new aggregation updates. If a batch takes longer than five seconds, Spark may report that processing is falling behind; this warning alone does not mean the application has failed.
+
 ## Running the Attendance Analysis
 
 The additional application detects all late check-ins and calculates the first daily check-in for each student.
@@ -139,24 +145,6 @@ The file `flink_window.sql` contains a Kafka table definition with an event-time
 
 It is included for query analysis. Flink execution was not performed as part of this project.
 
-## Main Streaming Configuration
-
-The main Spark application reads JSON events from the `campus-events` Kafka topic and filters records whose `eventType` is `check-in`.
-
-The attendance aggregation uses the following event-time settings:
-
-| Setting | Value |
-|---|---|
-| Window duration | 2 minutes |
-| Slide interval | 1 minute |
-| Watermark delay | 2 minutes |
-| Processing trigger | 5 seconds |
-| Output mode | Update |
-| Console rows | Up to 100 rows per micro-batch |
-| Checkpoint | `./checkpoint/campus-events-recovery` |
-
-The two-minute window with a one-minute slide creates overlapping windows. The watermark allows Spark to handle events that arrive late, within the configured delay. The console's `numRows=100` option controls how many aggregation-result rows are printed; it does not mean that only 100 Kafka events are consumed.
-
 ## Checkpointing
 
 Spark checkpoint directories are used to store streaming progress and state information, supporting recovery after application interruption.
@@ -171,5 +159,5 @@ The `screenshots/` directory contains evidence of Kafka topic creation, event pr
 
 - The data used in this project is synthetic and intended for educational purposes.
 - The attendance application is not connected to a real university attendance system.
-- The accuracy of the attendance analysis depends on the timestamps and data supplied by the producer.
+- Event-time results depend on the timestamps supplied by the producer and the configured watermark.
 - Flink SQL is documented as a query-design exercise, not as an executed Flink job.
