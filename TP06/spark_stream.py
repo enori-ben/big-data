@@ -1,4 +1,3 @@
-
 from pyspark.sql import SparkSession
 
 from pyspark.sql.functions import (
@@ -92,11 +91,13 @@ query = (
     .outputMode("update")
     .format("console")
     .option("truncate", "false")
-  
-.option("checkpointLocation", "./checkpoint/campus-events-recovery")
-
-.trigger(processingTime="5 seconds")
-.start()
+    .option("numRows", "100")
+    .option(
+        "checkpointLocation",
+        "./checkpoint/campus-events-recovery"
+    )
+    .trigger(processingTime="5 seconds")
+    .start()
 )
 
 
