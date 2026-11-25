@@ -92,10 +92,7 @@ query = (
     .format("console")
     .option("truncate", "false")
     .option("numRows", "100")
-    .option(
-        "checkpointLocation",
-        "./checkpoint/campus-events-recovery"
-    )
+    .option("checkpointLocation", "./checkpoint/campus-events-recovery")
     .trigger(processingTime="5 seconds")
     .start()
 )
