@@ -27,17 +27,15 @@ An additional Spark application detects late check-ins and identifies each stude
 ## Project Structure
 
 ```text
-tp06-stream-processing/
-│
+TP06/
 ├── producer.py
 ├── spark_stream.py
 ├── late_checkin.py
 ├── flink_window.sql
 ├── requirements.txt
 ├── README.md
-├── report.md
+├── report.pdf
 ├── .gitignore
-│
 └── screenshots/
     ├── kafka_topic.png
     ├── producer_output.png
@@ -106,6 +104,20 @@ python producer.py
 ```
 
 The producer sends synthetic JSON events to Kafka. Spark consumes and processes these events in streaming micro-batches.
+
+## Main Streaming Configuration and Output
+
+The main Spark application reads JSON messages from the Kafka topic `campus-events`, parses the event fields, converts `eventTime` into an event-time timestamp, and filters the stream to retain only `check-in` events.
+
+The aggregation groups check-ins by department using a two-minute event-time window that slides every one minute. A two-minute watermark is configured to manage late-arriving events. The streaming query uses update output mode and a five-second processing-time trigger.
+
+The console sink is configured with:
+
+- `truncate = false` to display complete window values without truncating long fields.
+- `numRows = 100` to display up to 100 aggregation-result rows per micro-batch.
+- A checkpoint directory at `./checkpoint/campus-events-recovery` to preserve streaming progress and state for recovery.
+
+**Important:** `numRows = 100` controls the maximum number of result rows printed by the console sink in each micro-batch. It does not mean that Spark receives or displays exactly 100 raw Kafka events. Since the stream filters out non-check-in events and groups the remaining events by time window and department, the number of displayed aggregation rows can be smaller than the number of produced events.
 
 ## Running the Attendance Analysis
 
